@@ -1,6 +1,18 @@
 # Travel Companion: notes for Claude
 
-> **DRAFT, waiting for the owner's approval.** Lines marked **(proposed)** are not decided yet. Don't scaffold until the owner approves the stack and data model.
+> **Stack decided (Option B). Data model waiting for the owner's approval.** Lines marked **(proposed)** are not decided yet. Don't scaffold until the owner approves the data model.
+
+## Decisions (from the owner, 23 Oct 26)
+- **Phones:** latest iPhone and latest Samsung. Both installed as a home-screen PWA.
+- **Route:** Egypt first (group tour), then Czechia, Latvia, Lithuania, Estonia, Finland, Poland, Germany. In February, Egypt, the Baltics and Finland are UTC+2 and Czechia, Poland and Germany are UTC+1, so zone changes are one hour; still store IANA zones (`Africa/Cairo`, `Europe/Prague`, `Europe/Riga`, `Europe/Vilnius`, `Europe/Tallinn`, `Europe/Helsinki`, `Europe/Warsaw`, `Europe/Berlin`).
+- **Source material:** tour and flight PDFs; other bookings are confirmation emails/pages that can be turned into PDFs. Import is done in a Claude session into an import file (no paid AI inside the app).
+- **Offline = read-only.** Itinerary, times and meeting points must be viewable offline. Wi-Fi is available daily, so edits are online-only and there is no offline edit queue in Phase 1.
+- **Map:** an online in-app map is enough (they use other apps for navigation). No offline map packs. Cached tiles are a nice-to-have, not a requirement.
+- **"Where we've been":** a daily record of places actually visited is a core feature, not a route-following map.
+- **Sign-in:** email 6-digit code typed inside the app (no link, so iOS never switches windows). Secure but easy.
+- **Editing:** both users edit everything. Each user has a colour (owner = blue, sister = pink); additions and edits are tinted by who made them. Default text is white/black by light/dark mode.
+- **Trips:** every trip is stored. A finished trip can be **archived** (read-only log) and is excluded from resets and "fresh start" actions. The app shows the active trip; a trip switcher can come later.
+- **Look:** house look (Proton Seasons, dark) plus a light mode; refine once the app is running.
 
 **Read the house rules first:** [HOUSE-RULES.md](https://github.com/jcm-book-library/control-room/blob/main/HOUSE-RULES.md) in `control-room` (plain text: https://raw.githubusercontent.com/jcm-book-library/control-room/main/HOUSE-RULES.md). The notes below are this repo's own; where they are more specific, they win. The project charter is `project.json`.
 
@@ -14,17 +26,18 @@
 - **Data lives in Supabase, not a Google Sheet.** The Google Sheet rules in HOUSE-RULES section 1 don't apply here; the Supabase rules below do.
 - GitHub Pages is published by a GitHub Action that builds `dist/` from `main` (like recall-arcade).
 
-## Stack (proposed: Option B, Vite PWA)
+## Stack (decided: Option B, Vite PWA)
 - Vite + React + TypeScript, `vite-plugin-pwa` (Workbox) for the service worker and install.
 - Dexie (IndexedDB) as the on-phone copy of the trip; Supabase JS for auth and sync.
-- MapLibre GL JS (or Leaflet) with tiles that are allowed to be cached offline. The tile source is decided by the week-1 offline-map spike.
+- Leaflet or MapLibre GL JS for an online map (stops, hotels, meeting points, visited places). Pick a tile provider whose free tier and terms fit (OpenStreetMap's own tiles have a usage policy; check before launch).
 - Tests: Vitest for logic (time zones, sleep maths, sync), Playwright for screens at 390px and 1280px, including an offline run.
 - Scripts and packages pinned to exact versions.
 
 ## Rules for the code
 - **Offline first.** Screens read from Dexie, never straight from Supabase. Sync runs in the background and writes into Dexie.
-- **Today must work in flight mode:** today's (and tomorrow's) items, meeting points and map tiles are always on the phone.
-- **Edits made offline go into an outbox** and are sent when back online. Conflicts: last write wins per row, using `updated_at` (proposed).
+- **The whole active trip is on the phone** (it's small), so the itinerary, times and meeting points open in flight mode. The map needs a connection.
+- **Edits are online-only** in Phase 1; offline, the app is read-only and says so. Concurrent edits: last write wins per row, using `updated_at`. An offline outbox is a possible later add if it proves needed.
+- **Who did it:** every row keeps `updated_by`; the UI tints by the member's `colour`.
 - **Times:** every timed item stores a local date, an optional local time and an IANA time zone (`Europe/Rome`). Flights store both ends. Never store "naked" times without a zone. Display in the item's own local time; label the zone when it differs from the previous item.
 - **Unconfirmed times are normal:** `time_precision` is `exact`, `approx`, `part_of_day` or `none`. Show "Afternoon" or "Time TBC", never a fake 00:00.
 - **One-handed use:** main actions in the bottom third of the screen, touch targets at least 44px, no sideways scrolling.
@@ -78,12 +91,12 @@ travel-app/
 Today is 23 Oct 26. Phase 1 must be done by **mid-Jan 27**; departure is Feb 27.
 
 **Phase 1: must work on the trip**
-1. Week 1: decisions, Supabase project, schema + RLS, sign-in for two users. **Offline-map spike** (biggest risk).
+1. Week 1: Supabase project, schema + RLS, email-code sign-in for two users, installable PWA shell on both phones. **Offline-read spike** (iPhone home-screen storage) is now the biggest risk.
 2. Weeks 2–3: timeline by day / city / region; add and edit items; unconfirmed times.
 3. Week 4: import (pasted structured text or JSON) and load the real trip.
 4. Week 5: pinned meeting places and times, visible to both users.
-5. Weeks 6–7: today's map (stops, hotel, meeting points); offline cache of data and tiles; outbox for offline edits.
-6. Week 8: time-zone polish, install on both phones, flight-mode tests.
+5. Weeks 6–7: "Where we've been" daily log (mark places visited, with a note); online map of the day (stops, hotel, meeting points, visited); offline read cache.
+6. Week 8: time-zone polish, install on both phones, flight-mode tests, archive-a-trip.
 7. Week 9: field test on a real day out with both phones. Fix list.
 8. Weeks 10–12 (Christmas break in here): buffer. **Phase 1 frozen by mid-Jan.**
 
