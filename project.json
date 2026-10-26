@@ -1,0 +1,10 @@
+{
+  "name": "Travel Companion",
+  "repo": "travel-app",
+  "purpose": "Phone-first trip itinerary, meeting points and visited-places log for two travellers; data lives in Supabase.",
+  "family": "Life",
+  "stage": "Planning",
+  "live": null,
+  "tags": [],
+  "updated": "2026-10-26"
+}

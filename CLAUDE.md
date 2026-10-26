@@ -1,6 +1,6 @@
 # Travel Companion: notes for Claude
 
-> **Stack decided (Option B). Data model waiting for the owner's approval.** Lines marked **(proposed)** are not decided yet. Don't scaffold until the owner approves the data model.
+> **Stack (Option B) and data model approved by the owner on 26 Oct 26.** Lines marked **(proposed)** are still open.
 
 ## Decisions (from the owner, 23 Oct 26)
 - **Phones:** latest iPhone and latest Samsung. Both installed as a home-screen PWA.
@@ -15,6 +15,14 @@
 - **Look:** house look (Proton Seasons, dark) plus a light mode; refine once the app is running.
 
 **Read the house rules first:** [HOUSE-RULES.md](https://github.com/jcm-book-library/control-room/blob/main/HOUSE-RULES.md) in `control-room` (plain text: https://raw.githubusercontent.com/jcm-book-library/control-room/main/HOUSE-RULES.md). The notes below are this repo's own; where they are more specific, they win. The project charter is `project.json`.
+
+## Partner app (decided 26 Oct 26)
+- A separate **Trip Planner** app (own repo, personal use: ideas, drafting trips, lifetime "where I've been" log) shares this app's **one Supabase project** and sign-in. Free Supabase allows only 2 active projects.
+- **This repo owns migrations for all shared tables.** The planner repo sends change requests; it never creates migrations for shared tables.
+- Planner-only table reserved here: `ideas` (private to its owner unless `shared_trip_id` is set). No screens for it in this app.
+- `places` belong to a user (`owner_id`) **or** a trip (`trip_id`). `visits` belong to a trip; the place is optional.
+- The wishlist-of-places item moves from this app's Phase 2 to the planner.
+- Don't start planner work until this app's Phase 1 is frozen (mid-Jan 27).
 
 ## What this is
 - A phone-first travel companion for two people (the owner and their sister) on a February 2027 trip: group tour, flights, independent stays, day tours, several cities and regions.
@@ -68,7 +76,8 @@ travel-app/
       auth/                 email-code sign-in
       itinerary/            timeline, day view, item editor, quick add
       meetings/             pinned meeting points
-      map/                  today map, offline tile download
+      map/                  online map of the day
+      visits/               'where we've been' daily log
       import/               paste-text / JSON import
       sleep/  places/  people/  overview/     (Phase 2)
       photos/  feed/                          (Phase 3)
@@ -102,7 +111,7 @@ Today is 23 Oct 26. Phase 1 must be done by **mid-Jan 27**; departure is Feb 27.
 
 **Phase 2: only if Phase 1 is working by mid-Dec**
 - Sleep planner (target hours per user, latest bedtime from hotel arrival and next start, across zones).
-- Favourite restaurants and wishlist on the map.
+- Favourite restaurants shown on the map (the wishlist moves to the planner app).
 - Fellow travellers log (records, not accounts).
 - Whole-trip overview map.
 
