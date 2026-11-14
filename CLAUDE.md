@@ -23,6 +23,8 @@
 - `places` belong to a user (`owner_id`) **or** a trip (`trip_id`). `visits` belong to a trip; the place is optional.
 - The wishlist-of-places item moves from this app's Phase 2 to the planner.
 - Don't start planner work until this app's Phase 1 is frozen (mid-Jan 27).
+- `trips.status` is `draft`, `active` or `archived` (0002). The planner builds drafts and hands them over by setting `active`; this app ignores drafts. Drafts and active trips are editable, archived is read-only.
+- `cities` is the city level of a trip (the planner's `trip_stops` request was folded into it). `cities.tz` can be null while a trip is a draft, so handle a missing zone; `cities.country_code` and `visits.country_code` are upper-case ISO 3166-1 alpha-2.
 
 ## What this is
 - A phone-first travel companion for two people (the owner and their sister) on a February 2027 trip: group tour, flights, independent stays, day tours, several cities and regions.
